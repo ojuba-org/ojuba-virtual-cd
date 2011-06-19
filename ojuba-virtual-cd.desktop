@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Name=Ojuba Virtual CD/DVD
+Name[ar]=أقراص أعجوبة الوهمية
+GenericName=Virtual CD
+GenericName[ar]=أقراص مدمجة وهمية
+Comment=Mount CD/DVD images (iso, nrg, bin, mdf, img, ..etc.)
+Comment[ar]=ضم صور أقراص مدمجة CD/DVD من نوع iso و nrg و bin و mdf و img ...إلخ
+Terminal=false
+TryExec=ojuba-virtual-cd
+Exec=ojuba-virtual-cd %F
+Icon=gtk-cdrom
+Categories=GTK;System;Filesystem;
+StartupNotify=false
+MimeType=application/x-cd-image;
+

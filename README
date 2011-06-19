@@ -1,0 +1,45 @@
+Ojuba Virtual CD
+Copyright (c) 2008 Muayyad Saleh Alsadi<alsadi@ojuba.org>
+
+PyGTK+ front-end for fuseiso
+Mount CD/DVD images (iso, nrg, bin, mdf, img, ..etc.)
+
+    Released under terms on Waqf Public License.
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the latest version Waqf Public License as
+    published by Ojuba.org.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+    The Latest version of the license can be found on
+    "http://www.ojuba.org/wiki/doku.php/waqf/license"
+
+###########################################
+Usage:
+###########################################
+if you would like to add it to your session startup you should call it
+
+  ojuba-virtual-cd --hidden
+
+
+it can be passed filename(s) of .iso files so you can use it in the
+action menu of .iso files in your file manager
+
+
+###########################################
+Installation
+###########################################
+
+copy ojuba-virtual-cd to your system binary files
+
+
+in order to work you should create a folder called /mnt/virtuals
+and give the user(s) rights to write on it
+type:
+
+
+su -c 'mkdir -m 1777 /mnt/virtuals'
+
+
