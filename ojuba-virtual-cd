@@ -24,7 +24,6 @@ import sys,os,os.path
 import time
 import gtk
 import gobject
-import egg.trayicon
 from subprocess import Popen,PIPE
 import gettext
 import re
@@ -83,12 +82,12 @@ def main():
 	  if os.path.isdir(i):
 	    try: os.rmdir(i)
 	    except: pass
-	tr = egg.trayicon.TrayIcon("OjubaVirtualCD")
-	box = gtk.EventBox()
-	img=gtk.Image()
-        img.set_from_stock(gtk.STOCK_CDROM, gtk.ICON_SIZE_MENU)
-	tr.add(box)
-	box.add(img)
+	tr = gtk.StatusIcon ()
+	tr.connect ('button-press-event', clicked_cb)
+	tr.set_title(_("OjubaVirtualCD"))
+	tr.set_from_stock(gtk.STOCK_CDROM)
+	tr.set_visible(False)
+	tr.set_visible(True)
 	setup_popup_menu()
 
 	build_about()
@@ -97,8 +96,6 @@ def main():
 		if (sys.argv[1]!='--hidden'):
 			for i in sys.argv[1:]: mount_f(i)
 	else: mount_cb()
-	
-	tr.show_all()
 	
 	refresh_cb()
 	gobject.timeout_add(15000, refresh_timer)
@@ -144,7 +141,7 @@ def build_about():
 
 def setup_popup_menu():
 	global popup_menu,box,mounted_menu,umount_menu_item
-	box.connect("button-press-event", clicked_cb)
+
 	popup_menu = gtk.Menu()
 	i = gtk.MenuItem(_("Mount image"))
 	i.connect('activate', mount_cb)
@@ -153,6 +150,7 @@ def setup_popup_menu():
 	mounted_menu = gtk.Menu()
         mounted_menu.add(gtk.SeparatorMenuItem())
 	i = gtk.ImageMenuItem(gtk.STOCK_REFRESH)
+	i.set_always_show_image(True)
 	i.connect('activate', refresh_cb)
         mounted_menu.add(i)
 
@@ -163,9 +161,11 @@ def setup_popup_menu():
         popup_menu.add(gtk.SeparatorMenuItem())
 
 	i = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
+	i.set_always_show_image(True)
         i.connect('activate', about_cb)
         popup_menu.add(i)
 	i = gtk.ImageMenuItem(gtk.STOCK_QUIT)
+	i.set_always_show_image(True)
         i.connect('activate', gtk.main_quit)
         popup_menu.add(i)
 
@@ -263,17 +263,18 @@ def refresh_timer(*args):
 	refresh_cb(); return True;
 
 def clicked_cb(widget, event):
-	if event.button == 3: show_popup_menu()
+	if event.button == 3: show_popup_menu(widget)
 
 def show_cb(*args): win.show_all()
 def about_cb(*args):
 	global about_dlg
 	about_dlg.run()
 	
-def show_popup_menu():
+def show_popup_menu(icon):
 	global popup_menu
-        popup_menu.show_all()
-	popup_menu.popup(None, None, None, 3, gtk.get_current_event_time())
+	popup_menu.show_all()
+	popup_menu.popup(None, None, gtk.status_icon_position_menu, 3, gtk.get_current_event_time(), icon)
+
 
 bus, bus_name, bus_object=None,None,None
 try:
