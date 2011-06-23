@@ -7,6 +7,7 @@ Group:		System Environment/Base
 URL:		http://www.ojuba.org
 Source:		http://git.ojuba.org/cgit/%{name}/snapshot/%{name}-%{version}.tar.bz2
 Requires:	fuseiso python pygtk2
+BuildRequires:  intltool
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 
