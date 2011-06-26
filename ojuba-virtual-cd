@@ -32,7 +32,6 @@ from glob import glob
 label_re=re.compile(r"""'([^']+)'""")
 
 mount_prefix=os.path.expanduser('~/.virtuals')
-tr,box,popup_menu,mounted_menu,umount_menu_item,about_dlg,dlg=None,None,None,None,None,None,None
 _ps=[]
 gettext.install('ojuba-virtual-cd', "/usr/share/locale", unicode=0)
 
@@ -75,48 +74,34 @@ def run_file_man(mp):
   elif os.path.exists('/usr/bin/nautilus'): run_in_bg("nautilus --no-desktop '%s'" % mp)
   elif os.path.exists('/usr/bin/konqueror'): run_in_bg("konqueror '%s'" % mp)
 
-def main():
-        global tr,box
-        check_mount_prefix()
-        for i in glob(os.path.join(mount_prefix,'*')):
-          if os.path.isdir(i):
-            try: os.rmdir(i)
-            except: pass
-        tr = gtk.StatusIcon ()
-        tr.connect ('button-press-event', clicked_cb)
-        tr.set_title(_("OjubaVirtualCD"))
-        tr.set_from_stock(gtk.STOCK_CDROM)
-        tr.set_visible(False)
-        tr.set_visible(True)
-        setup_popup_menu()
+def bad(msg):
+  dlg = gtk.MessageDialog (None,
+      gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+      gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
+      msg)
+  dlg.run()
+  dlg.destroy()
+  
+def check_mount_prefix():
+  if not os.path.exists(mount_prefix):
+    try: os.makedirs(mount_prefix)
+    except OSError:
+      bad( _("Mount prefix [%s] is not found, please create it.") % mount_prefix )
+      sys.exit(1)
 
-        build_about()
-        build_mount_dlg()
-        if len(sys.argv)>1:
-          if (sys.argv[1]!='--hidden'):
-            for i in sys.argv[1:]: mount_f(i)
-        else: mount_cb()
-        
-        refresh_cb()
-        gobject.timeout_add(15000, refresh_timer)
-
-        gtk.main()
-
-def hide_cb(w, *args): w.hide(); return True
-
-def build_about():
-        global about_dlg
-        about_dlg=gtk.AboutDialog()
-        about_dlg.set_default_response(gtk.RESPONSE_CLOSE)
-        about_dlg.connect('delete-event', hide_cb)
-        about_dlg.connect('response', hide_cb)
-        try: about_dlg.set_program_name("ojuba-virtual-cd")
-        except: pass
-        about_dlg.set_name(_("Ojuba Virtual CD"))
-        #about_dlg.set_version(version)
-        about_dlg.set_copyright("Copyright (c) 2008-2009 Muayyad Saleh Alsadi <alsadi@ojuba.org>")
-        about_dlg.set_comments(_("Mount CD/DVD images (iso, nrg, bin, mdf, img, ..etc.)"))
-        about_dlg.set_license("""
+class VCDAbout(gtk.AboutDialog):
+  def __init__(self):
+    gtk.AboutDialog.__init__(self)
+    self.set_default_response(gtk.RESPONSE_CLOSE)
+    self.connect('delete-event', lambda w, *a: w.hide() or True)
+    self.connect('response', lambda w, *a: w.hide() or True)
+    try: self.set_program_name("ojuba-virtual-cd")
+    except: pass
+    self.set_name(_("Ojuba Virtual CD"))
+    #about_dlg.set_version(version)
+    self.set_copyright("Copyright (c) 2008-2009 Muayyad Saleh Alsadi <alsadi@ojuba.org>")
+    self.set_comments(_("Mount CD/DVD images (iso, nrg, bin, mdf, img, ..etc.)"))
+    self.set_license("""
     Released under terms on Waqf Public License.
     This program is free software; you can redistribute it and/or modify
     it under the terms of the latest version Waqf Public License as
@@ -129,153 +114,189 @@ def build_about():
     The Latest version of the license can be found on
     "http://www.ojuba.org/wiki/doku.php/waqf/license"
 
-""")
-        about_dlg.set_website("http://virtualcd.ojuba.org/")
-        about_dlg.set_website_label("http://virtualcd.ojuba.org")
-        about_dlg.set_authors(["Muayyad Saleh Alsadi <alsadi@ojuba.org>"])
-#	about_dlg.set_documenters(documenters)
-#	about_dlg.set_artists(artists)
-#	about_dlg.set_translator_credits(translator_credits)
-#	about_dlg.set_logo(logo)
-#	about_dlg.set_logo_icon_name(icon_name)
+    """)
+    self.set_website("http://virtualcd.ojuba.org/")
+    self.set_website_label("http://virtualcd.ojuba.org")
+    self.set_authors(["Muayyad Saleh Alsadi <alsadi@ojuba.org>"])
+    #about_dlg.set_documenters(documenters)
+    #about_dlg.set_artists(artists)
+    #about_dlg.set_translator_credits(translator_credits)
+    #about_dlg.set_logo(logo)
+    #about_dlg.set_logo_icon_name(icon_name)
+    
+class VCD_mount_dlg(gtk.FileChooserDialog):
+  def __init__(self):
+    gtk.FileChooserDialog.__init__(self,_("Select CD/DVD image file"),buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+    ff=gtk.FileFilter()
+    ff.add_mime_type('application/x-cd-image')
+    for i in ('iso','nrg', 'bin','mdf','img'):
+      l=list(i)
+      ff.add_pattern('*.[%s%s][%s%s][%s%s]' % ( l[0],l[0].upper(), l[1],l[1].upper(), l[2],l[2].upper()))
+    self.set_filter(ff)
+    self.connect('delete-event', lambda w, *a: w.hide() or True)
+    self.connect('response', lambda w, *a: w.hide() or True)
 
-def setup_popup_menu():
-        global popup_menu,box,mounted_menu,umount_menu_item
+class VCDStatusIcon(gtk.StatusIcon):
+  def __init__(self):
+    gtk.StatusIcon.__init__(self)
+    self.connect ('button-press-event', self.clicked_cb)
+    self.set_title(_("OjubaVirtualCD"))
+    self.set_from_stock(gtk.STOCK_CDROM)
+    
+    self.mount_dlg = VCD_mount_dlg()
+    self.about_dlg = VCDAbout()
+    
+    self.setup_popup_menu()
+    self.startUP()
+    self.refresh_cb()
+    
+    self.set_visible(True)
+    
+    gobject.timeout_add(15000, self.refresh_timer)
+    
+  def startUP(self):
+    if len(sys.argv)>1:
+      if (sys.argv[1]!='--hidden'):
+        for i in sys.argv[1:]: self.mount_f(i)
+    else: self.mount_cb()
+    
+  def setup_popup_menu(self):
+    self.popup_menu = gtk.Menu()
+    self.mounted_menu = gtk.Menu()
+    self.open_menu = gtk.Menu()
+    
+    i = gtk.MenuItem(_("Mount image"))
+    i.connect('activate', self.mount_cb)
+    self.popup_menu.add(i)
 
-        popup_menu = gtk.Menu()
-        i = gtk.MenuItem(_("Mount image"))
-        i.connect('activate', mount_cb)
-        popup_menu.add(i)
+    self.mounted_menu.add(gtk.SeparatorMenuItem())
+    i = gtk.ImageMenuItem(gtk.STOCK_REFRESH)
+    i.connect('activate', self.refresh_cb)
+    i.set_always_show_image(True)
+    self.mounted_menu.add(i)
+    
+    self.open_menu.add(gtk.SeparatorMenuItem())
+    i = gtk.ImageMenuItem(gtk.STOCK_REFRESH)
+    i.connect('activate', self.refresh_cb)
+    i.set_always_show_image(True)
+    self.open_menu.add(i)
+    
+    self.popup_menu.add(gtk.SeparatorMenuItem())
 
-        mounted_menu = gtk.Menu()
-        mounted_menu.add(gtk.SeparatorMenuItem())
-        i = gtk.ImageMenuItem(gtk.STOCK_REFRESH)
-        i.set_always_show_image(True)
-        i.connect('activate', refresh_cb)
-        mounted_menu.add(i)
-
-        umount_menu_item=i= gtk.MenuItem(_("unmount"))
-        i.set_submenu(mounted_menu)
-        popup_menu.add(i)
-
-        popup_menu.add(gtk.SeparatorMenuItem())
-
-        i = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
-        i.set_always_show_image(True)
-        i.connect('activate', about_cb)
-        popup_menu.add(i)
-        i = gtk.ImageMenuItem(gtk.STOCK_QUIT)
-        i.set_always_show_image(True)
-        i.connect('activate', gtk.main_quit)
-        popup_menu.add(i)
-
-def bad(msg):
-        dlg = gtk.MessageDialog (None,
-            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-            gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
-            msg)
-        dlg.run()
-        dlg.destroy()
-def check_mount_prefix():
-        if not os.path.exists(mount_prefix):
-          try: os.makedirs(mount_prefix)
-          except OSError:
-            bad( _("Mount prefix [%s] is not found, please create it.") % mount_prefix )
-            sys.exit(1)
-
-def build_mount_dlg():
-        global dlg;
-        ff=gtk.FileFilter()
-        ff.add_mime_type('application/x-cd-image')
-        for i in ('iso','nrg', 'bin','mdf','img'):
-          l=list(i)
-          ff.add_pattern('*.[%s%s][%s%s][%s%s]' % ( l[0],l[0].upper(), l[1],l[1].upper(), l[2],l[2].upper()))
-        dlg=gtk.FileChooserDialog(_("Select CD/DVD image file"),buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT, gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        dlg.set_filter(ff)
-        dlg.connect('delete-event', hide_cb)
-        dlg.connect('response', hide_cb)
-
-def get_label_from_blkid(fn):
-        try:
-          p=Popen(['blkid','-o','value','-s','LABEL',fn], 0, stdout=PIPE)
-          l=p.communicate()[0].strip()
-        except: return None
-        r=p.returncode
-        if r==0 and l and len(l)>0: return l
-        else: return None
-def get_label_from_file(fn):
-        try:
-          p=Popen(['file',fn], 0, stdout=PIPE)
-          o=p.communicate()[0].split(':',1)[1].strip()
-          l=label_re.findall(o)[0].strip()
-        except: return None
-        r=p.returncode
-        if r==0 and l and len(l)>0: return l
-        else: return None
-def get_label(fn):
-        return get_label_from_blkid(fn) or get_label_from_file(fn)
-
-def mount_f(fn):
-        if not os.path.exists(fn): bad(_("File does not exist")); return -1
-        l=get_label(fn)
-        if not l: l=os.path.basename(fn)
-        mp=os.path.join( mount_prefix, l )
-        if os.path.exists(mp):
-          if os.path.ismount(os.path.join(mp)): bad(_("Already mounted")); return -2
-          try: os.rmdir(mp)
-          except OSError: bad(_("Mount point [%s] already exists, remove it please!") % mp); return -1
-        try: os.mkdir(mp)
-        except: bad(_('Could not create folder [%s]') % mp.decode(sys.getfilesystemencoding()) ); return -1
-        
-        r=os.system("fuseiso -c UTF8 '%s' '%s'" % (fn, mp))
-        if r: bad(_("could not mount [%s]") % mp); return -1
-        else: run_file_man(mp)
-        refresh_cb()
-        return 0
-def mount_cb(*args):
-        global dlg
-        if (dlg.run()==gtk.RESPONSE_ACCEPT):
-          mount_f(dlg.get_filename())
-        dlg.hide()
-        
-def umount_cb(i, mp): 
-        mpp=os.path.join(mount_prefix,mp.encode(sys.getfilesystemencoding()))
-        r=os.system("fusermount -u '%s'" % mpp)
-        if r: bad(_("could not unmount [%s]") % mp)
-        else: os.rmdir(mpp)
-        refresh_cb()
-
-def refresh_cb(*args):
-        global popup_menu, mounted_menu, umount_menu_item
-        popup_menu.popdown()
-        mm = gtk.Menu()
-        for i in os.listdir(mount_prefix):
-          if (os.path.ismount(os.path.join(mount_prefix,i))): j=gtk.MenuItem(i.decode(sys.getfilesystemencoding())); mm.add(j); j.connect('activate', umount_cb, i)
-        mm.add(gtk.SeparatorMenuItem())
-        i = gtk.ImageMenuItem(gtk.STOCK_REFRESH)
-        i.connect('activate', refresh_cb)
-        mm.add(i)
-        mounted_menu=mm
-        s=umount_menu_item.get_submenu()
-        umount_menu_item.set_submenu(mm)
-        del s
-def refresh_timer(*args):
-        refresh_cb(); return True;
-
-def clicked_cb(widget, event):
-        if event.button == 3: show_popup_menu(widget)
-
-def show_cb(*args): win.show_all()
-def about_cb(*args):
-        global about_dlg
-        about_dlg.run()
-        
-def show_popup_menu(icon):
-        global popup_menu
-        popup_menu.show_all()
-        popup_menu.popup(None, None, gtk.status_icon_position_menu, 3, gtk.get_current_event_time(), icon)
+    self.open_menu_item=i= gtk.MenuItem(_("Open mounted image"))
+    i.set_submenu(self.open_menu)
+    self.popup_menu.add(i)
 
 
+    self.umount_menu_item=i= gtk.MenuItem(_("Unmount"))
+    i.set_submenu(self.mounted_menu)
+    self.popup_menu.add(i)
+
+    self.popup_menu.add(gtk.SeparatorMenuItem())
+
+    i = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
+    i.connect('activate', self.about_cb)
+    i.set_always_show_image(True)
+    self.popup_menu.add(i)
+    
+    i = gtk.ImageMenuItem(gtk.STOCK_QUIT)
+    i.connect('activate', gtk.main_quit)
+    i.set_always_show_image(True)
+    self.popup_menu.add(i)
+
+  def show_popup_menu(self):
+    self.popup_menu.show_all()
+    self.popup_menu.popup(None, None, gtk.status_icon_position_menu, 3, gtk.get_current_event_time(), self)
+
+  def clicked_cb(self, w, event):
+    if event.button == 3: self.show_popup_menu()
+
+  def refresh_timer(self):
+    self.refresh_cb(); return True;
+    
+  def refresh_cb(self, *args):
+    self.popup_menu.popdown()
+    mm = gtk.Menu()
+    oo = gtk.Menu()
+    for i in os.listdir(mount_prefix):
+      mp = os.path.join(mount_prefix,i)
+      if (os.path.ismount(mp)): 
+        j = gtk.MenuItem(i.decode(sys.getfilesystemencoding())) 
+        o = gtk.MenuItem(i.decode(sys.getfilesystemencoding())) 
+        j.connect('activate', self.umount_cb, i)
+        o.connect('activate', lambda a: run_file_man(mp))
+        mm.add(j)
+        oo.add(o) 
+      mm.add(gtk.SeparatorMenuItem())
+      oo.add(gtk.SeparatorMenuItem())
+    i = gtk.ImageMenuItem(gtk.STOCK_REFRESH)
+    i.connect('activate', self.refresh_cb)
+    mm.add(i)
+    i = gtk.ImageMenuItem(gtk.STOCK_REFRESH)
+    i.connect('activate', self.refresh_cb)
+    oo.add(i)
+    mounted_menu = mm
+    open_menu = oo
+    g = self.open_menu_item.get_submenu()
+    s = self.umount_menu_item.get_submenu()
+    self.umount_menu_item.set_submenu(mm)
+    self.open_menu_item.set_submenu(oo)
+    del s, g
+
+  def mount_f(self, fn):
+    if not os.path.exists(fn): bad(_("File does not exist")); return -1
+    l=self.get_label(fn)
+    if not l: l=os.path.basename(fn)
+    mp=os.path.join( mount_prefix, l )
+    if os.path.exists(mp):
+      if os.path.ismount(os.path.join(mp)): bad(_("Already mounted")); return -2
+      try: os.rmdir(mp)
+      except OSError: bad(_("Mount point [%s] already exists, remove it please!") % mp); return -1
+    try: os.mkdir(mp)
+    except: bad(_('Could not create folder [%s]') % mp.decode(sys.getfilesystemencoding()) ); return -1
+  
+    r=os.system("fuseiso -c UTF8 '%s' '%s'" % (fn, mp))
+    if r: bad(_("Could not mount [%s]") % mp); return -1
+    else: run_file_man(mp)
+    self.refresh_cb()
+    return 0
+  def mount_cb(self, *args):
+    if (self.mount_dlg.run()==gtk.RESPONSE_ACCEPT):
+      self.mount_f(self.mount_dlg.get_filename())
+    self.mount_dlg.hide()
+
+  def get_label_from_blkid(self, fn):
+    try:
+      p=Popen(['blkid','-o','value','-s','LABEL',fn], 0, stdout=PIPE)
+      l=p.communicate()[0].strip()
+    except: return None
+    r=p.returncode
+    if r==0 and l and len(l)>0: return l
+    else: return None
+  
+  def get_label_from_file(self, fn):
+    try:
+      p=Popen(['file',fn], 0, stdout=PIPE)
+      o=p.communicate()[0].split(':',1)[1].strip()
+      l=label_re.findall(o)[0].strip()
+    except: return None
+    r=p.returncode
+    if r==0 and l and len(l)>0: return l
+    else: return None
+  
+  def get_label(self, fn):
+    return self.get_label_from_blkid(fn) or self.get_label_from_file(fn)
+
+  def umount_cb(self, i, mp): 
+    mpp=os.path.join(mount_prefix,mp.encode(sys.getfilesystemencoding()))
+    r=os.system("fusermount -u '%s'" % mpp)
+    if r: bad(_("Could not unmount [%s]") % mp)
+    else: os.rmdir(mpp)
+    self.refresh_cb()
+
+  def about_cb(self, *args):
+    self.about_dlg.run()
+  
 bus, bus_name, bus_object=None,None,None
 try:
   import dbus
@@ -288,7 +309,7 @@ try:
 except ImportError: pass
 
 def init_dbus():
-  global bus_name, bus_object
+  global bus_name, bus_object, app
   if not bus: return
   class Manager(dbus.service.Object):
     def __init__(self, bus, path):
@@ -297,7 +318,7 @@ def init_dbus():
     @dbus.service.method("org.ojuba.VirtualCD", in_signature='as', out_signature='i')
     def Mount(self,a):
       r=0
-      for fn in a: r|=mount_f(fn)
+      for fn in a: r|=app.mount_f(fn)
       return r
 
     @dbus.service.method("org.ojuba.VirtualCD", in_signature='', out_signature='s')
@@ -323,6 +344,18 @@ def init_dbus():
   bus_name = dbus.service.BusName("org.ojuba.VirtualCD", bus)
   bus_object = Manager(bus, '/Manager')
 
-init_dbus()
-main()
+def main():
+  global app
+  check_mount_prefix()
+  for i in glob(os.path.join(mount_prefix,'*')):
+    if os.path.isdir(i):
+      try: os.rmdir(i)
+      except: pass
+  init_dbus()
+  app = VCDStatusIcon()
+  try: gtk.main()
+  except KeyboardInterrupt: print "Exiting..."
+  
+if __name__ == '__main__':
+  main()
 
