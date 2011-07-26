@@ -1,6 +1,6 @@
 Name:		ojuba-virtual-cd
 Summary:	Virtual CD/DVD using fuseiso
-Version:	0.3.0
+Version:	0.3.1
 Release:	5
 License:	Waqf
 Group:		System Environment/Base
