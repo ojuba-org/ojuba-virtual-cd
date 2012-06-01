@@ -19,20 +19,20 @@ Virtual CD/DVD using fuseiso
 %setup -q
 
 %build
-./gen-mo.sh
+make %{?_smp_mflags}
+
 %install
 rm -rf $RPM_BUILD_ROOT
+%makeinstall DESTDIR=$RPM_BUILD_ROOT
 
-install -d $RPM_BUILD_ROOT%{_bindir}
-install -d $RPM_BUILD_ROOT%{_datadir}/applications/
-cp -pa locale $RPM_BUILD_ROOT%{_datadir}/
-install -p -m 644 %{name}.desktop $RPM_BUILD_ROOT%{_datadir}/applications/
-install -p -m 755 %{name} $RPM_BUILD_ROOT%{_bindir}
+%clean
+rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
 %doc LICENSE-en LICENSE-ar.txt README
 %{_bindir}/%{name}
+%{python_sitelib}/*
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/locale/*/*/*.mo
 

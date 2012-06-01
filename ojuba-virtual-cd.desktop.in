@@ -1,0 +1,14 @@
+
+[Desktop Entry]
+Encoding=UTF-8
+_Name=Ojuba Virtual CD/DVD
+_Comment=Mount CD/DVD images (iso, nrg, bin, mdf, img, ..etc.)
+Terminal=false
+Type=Application
+TryExec=ojuba-virtual-cd
+Exec=ojuba-virtual-cd %F
+Icon=gtk-cdrom
+Categories=GTK;System;Filesystem;
+StartupNotify=false
+MimeType=application/x-cd-image;
+
