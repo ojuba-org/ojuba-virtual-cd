@@ -1,7 +1,7 @@
 Name:		ojuba-virtual-cd
 Summary:	Virtual CD/DVD using fuseiso
-Version:	0.3.1
-Release:	5
+Version:	0.3.2
+Release:	1
 License:	Waqf
 Group:		System Environment/Base
 URL:		http://www.ojuba.org
@@ -37,6 +37,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/locale/*/*/*.mo
 
 %changelog
+* Sun Jun 2 2012 Muayyad Saleh Alsadi <alsadi@ojuba.org> - 0.3.2-1
+- port to gtk3
+
 * Sun Jul 19 2009 Muayyad Saleh Alsadi <alsadi@ojuba.org> - 0.3.0-5
 - add session management
 - use ~/.virtuals instead of system /mnt/virtuals
