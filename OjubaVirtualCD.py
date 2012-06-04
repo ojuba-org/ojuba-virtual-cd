@@ -172,14 +172,14 @@ class VCDStatusIcon(Gtk.StatusIcon):
         i.set_always_show_image(True)
         self.mounted_menu.add(i)
         
-        self.open_menu.add(Gtk.SeparatorMenuItem())
+        self.open_menu.add(Gtk.SeparatorMenuItem.new())
         
         i = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_REFRESH, None)
         i.connect('activate', self.refresh_cb)
         i.set_always_show_image(True)
         self.open_menu.add(i)
         
-        self.popup_menu.add(Gtk.SeparatorMenuItem())
+        self.popup_menu.add(Gtk.SeparatorMenuItem.new())
 
         self.open_menu_item=i= Gtk.MenuItem(_("Open mounted image"))
         i.set_submenu(self.open_menu)
@@ -190,14 +190,14 @@ class VCDStatusIcon(Gtk.StatusIcon):
         i.set_submenu(self.mounted_menu)
         self.popup_menu.add(i)
 
-        self.popup_menu.add(Gtk.SeparatorMenuItem())
+        self.popup_menu.add(Gtk.SeparatorMenuItem.new())
 
         i =    Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ABOUT, None)
         i.connect('activate', self.about_cb)
         i.set_always_show_image(True)
         self.popup_menu.add(i)
         
-        i = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_QUIT,None)
+        i = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_QUIT, None)
         i.connect('activate', Gtk.main_quit)
         i.set_always_show_image(True)
         self.popup_menu.add(i)
