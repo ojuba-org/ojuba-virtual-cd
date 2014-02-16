@@ -1,42 +1,45 @@
+%global owner ojuba-org
+%global commit #Write commit number here
+
 Name:		ojuba-virtual-cd
 Summary:	Virtual CD/DVD using fuseiso
 Version:	0.3.2
-Release:	1
-License:	Waqf
+Release:	2
+License:	WAQFv2
 Group:		System Environment/Base
-URL:		http://www.ojuba.org
-Source:		http://git.ojuba.org/cgit/%{name}/snapshot/%{name}-%{version}.tar.bz2
-Requires:	fuseiso python
-Requires:   pygobject3 >= 3.0.2
-BuildRequires:  intltool
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+URL:		http://ojuba.org
+Source:		https://github.com/%{owner}/%{name}/archive/%{commit}/%{name}-%{commit}.tar.gz
+Requires:	fuseiso
+Requires:	python2
+Requires:	pygobject3 >= 3.0.2
+BuildRequires:	python2-devel
+BuildRequires:	intltool
 BuildArch:      noarch
 
 %description
 Virtual CD/DVD using fuseiso
 
 %prep
-%setup -q
+%setup -q -n %{name}-%{commit}
 
 %build
 make %{?_smp_mflags}
 
 %install
-rm -rf $RPM_BUILD_ROOT
 %makeinstall DESTDIR=$RPM_BUILD_ROOT
-
-%clean
-rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc LICENSE-en LICENSE-ar.txt README
+%doc README waqf2-ar.pdf
 %{_bindir}/%{name}
-%{python_sitelib}/*
+%{python2_sitelib}/*
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/locale/*/*/*.mo
 
 %changelog
+* Sun Feb 16 2014 Mosaab Alzoubi <moceap@hotmail.com> - 0.3.2-2
+- General Revision.
+
 * Sun Jun 2 2012 Muayyad Saleh Alsadi <alsadi@ojuba.org> - 0.3.2-1
 - port to gtk3
 
@@ -48,4 +51,3 @@ rm -rf $RPM_BUILD_ROOT
 
 * Sat Dec 20 2008 Muayyad Saleh Alsadi <alsadi@ojuba.org> - 0.2.0-1
 - fix permissions to allow all users to share
-
