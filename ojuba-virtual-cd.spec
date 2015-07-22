@@ -1,23 +1,26 @@
 %global owner ojuba-org
 %global commit #Write commit number here
 
-Name:		ojuba-virtual-cd
-Summary:	Virtual CD/DVD using fuseiso
-Version:	0.3.2
-Release:	2
-License:	WAQFv2
-Group:		System Environment/Base
-URL:		http://ojuba.org
-Source:		https://github.com/%{owner}/%{name}/archive/%{commit}/%{name}-%{commit}.tar.gz
-Requires:	fuseiso
-Requires:	python2
-Requires:	pygobject3 >= 3.0.2
-BuildRequires:	python2-devel
-BuildRequires:	intltool
-BuildArch:      noarch
+Name: ojuba-virtual-cd
+Summary: Virtual CD/DVD Driver
+Summary(ar): محرك أقراص وهمية
+Version: 0.3.2
+Release: 3%{?dist}
+License: WAQFv2
+URL: http://ojuba.org
+Source: https://github.com/%{owner}/%{name}/archive/%{commit}/%{name}-%{commit}.tar.gz
+Requires: fuseiso
+Requires: python2
+Requires: pygobject3 >= 3.0.2
+BuildRequires: python2-devel
+BuildRequires: intltool
+BuildArch: noarch
 
 %description
 Virtual CD/DVD using fuseiso
+
+%description -l ar
+محرّك أقراص وهمية متوافق مع فيوزآيزو
 
 %prep
 %setup -q -n %{name}-%{commit}
@@ -26,17 +29,26 @@ Virtual CD/DVD using fuseiso
 make %{?_smp_mflags}
 
 %install
-%makeinstall DESTDIR=$RPM_BUILD_ROOT
+%make_install
 
 %files
-%defattr(-,root,root,-)
-%doc README waqf2-ar.pdf
+%license waqf2-ar.pdf
+%doc README
 %{_bindir}/%{name}
 %{python2_sitelib}/*
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/locale/*/*/*.mo
 
 %changelog
+* Wed Jul 22 2015 Mosaab Alzoubi <moceap@hotmail.com> - 0.3.2-3
+- Gereral Revision
+- Add Arabic Summary and Discription
+- Fix requires
+- Use %%make_install
+- Remove old ATTR way
+- Remove Group tag
+- Use %%license
+
 * Sun Feb 16 2014 Mosaab Alzoubi <moceap@hotmail.com> - 0.3.2-2
 - General Revision.
 
