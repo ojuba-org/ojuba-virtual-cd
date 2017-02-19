@@ -1,14 +1,13 @@
 %global owner ojuba-org
-%global commit #Write commit number here
 
 Name: ojuba-virtual-cd
 Summary: Virtual CD/DVD Driver
 Summary(ar): محرك أقراص وهمية
-Version: 0.3.2
-Release: 3%{?dist}
+Version: 0.4
+Release: 1%{?dist}
 License: WAQFv2
 URL: http://ojuba.org
-Source: https://github.com/%{owner}/%{name}/archive/%{commit}/%{name}-%{commit}.tar.gz
+Source: https://github.com/%{owner}/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 Requires: fuseiso
 Requires: python2
 Requires: pygobject3 >= 3.0.2
@@ -23,7 +22,7 @@ Virtual CD/DVD using fuseiso
 محرّك أقراص وهمية متوافق مع فيوزآيزو
 
 %prep
-%setup -q -n %{name}-%{commit}
+%autosetup -n %{name}-%{version}
 
 %build
 make %{?_smp_mflags}
@@ -31,15 +30,67 @@ make %{?_smp_mflags}
 %install
 %make_install
 
+
+
+# Register as an application to be visible in the software center
+#
+# NOTE: It would be *awesome* if this file was maintained by the upstream
+# project, translated and installed into the right place during `make install`.
+#
+# See http://www.freedesktop.org/software/appstream/docs/ for more details.
+#
+mkdir -p $RPM_BUILD_ROOT%{_datadir}/appdata
+cat > $RPM_BUILD_ROOT%{_datadir}/appdata/%{name}.appdata.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2017 Mosaab Alzoubi <moceap@hotmail.com> -->
+<!--
+EmailAddress: moceap@hotmail.com
+SentUpstream: 2017-2-18
+-->
+<application>
+  <id type="desktop">%{name}.desktop</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <summary>Virtual CD/DVD Driver</summary>
+  <summary xml:lang="ar">محرك أقراص وهمية</summary>
+  <description>
+    <p>
+	Virtual CD/DVD Driver.
+    </p>
+  </description>
+  <description xml:lang="ar">
+    <p>
+	محرك أقراص وهمية.
+    </p>
+  </description>
+  <url type="homepage">https://github.com/ojuba-org/%{name}</url>
+  <screenshots>
+    <screenshot type="default">http://ojuba.org/screenshots/%{name}.png</screenshot>
+  </screenshots>
+  <updatecontact>moceap@hotmail.com</updatecontact>
+</application>
+EOF
+
+
+
 %files
 %license waqf2-ar.pdf
 %doc README
 %{_bindir}/%{name}
 %{python2_sitelib}/*
 %{_datadir}/applications/%{name}.desktop
+%{_datadir}/pixmaps/%{name}.png
+%{_datadir}/appdata/%{name}.appdata.xml
 %{_datadir}/locale/*/*/*.mo
 
 %changelog
+* Sun Feb 19 2017 Mosaab Alzoubi <moceap@hotmail.com> - 0.4-1
+- Update to 0.4
+- Support Wayland
+- New Icon
+- Add Arabic data
+- New way to Github
+- Add Appdata
+
 * Wed Jul 22 2015 Mosaab Alzoubi <moceap@hotmail.com> - 0.3.2-3
 - Gereral Revision
 - Add Arabic Summary and Discription
