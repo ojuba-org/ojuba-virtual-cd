@@ -5,7 +5,6 @@ _Name=Ojuba Virtual CD/DVD
 _Comment=Mount CD/DVD images (iso, nrg, bin, mdf, img, ..etc.)
 Terminal=false
 Type=Application
-TryExec=env GDK_BACKEND=x11 ojuba-virtual-cd
 Exec=env GDK_BACKEND=x11 ojuba-virtual-cd %F
 Icon=ojuba-virtual-cd
 Categories=GTK;System;Filesystem;
