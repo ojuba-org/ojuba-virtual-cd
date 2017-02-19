@@ -3,7 +3,7 @@
 Name: ojuba-virtual-cd
 Summary: Virtual CD/DVD Driver
 Summary(ar): محرك أقراص وهمية
-Version: 0.4
+Version: 0.4.1
 Release: 1%{?dist}
 License: WAQFv2
 URL: http://ojuba.org
@@ -83,8 +83,8 @@ EOF
 %{_datadir}/locale/*/*/*.mo
 
 %changelog
-* Sun Feb 19 2017 Mosaab Alzoubi <moceap@hotmail.com> - 0.4-1
-- Update to 0.4
+* Sun Feb 19 2017 Mosaab Alzoubi <moceap@hotmail.com> - 0.4.1-1
+- Update to 0.4.1
 - Support Wayland
 - New Icon
 - Add Arabic data
