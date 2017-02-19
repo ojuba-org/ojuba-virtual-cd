@@ -7,7 +7,7 @@ Terminal=false
 Type=Application
 TryExec=env GDK_BACKEND=x11 ojuba-virtual-cd
 Exec=env GDK_BACKEND=x11 ojuba-virtual-cd %F
-Icon=gtk-cdrom
+Icon=ojuba-virtual-cd
 Categories=GTK;System;Filesystem;
 StartupNotify=false
 MimeType=application/x-cd-image;
