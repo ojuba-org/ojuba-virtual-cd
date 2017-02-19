@@ -13,8 +13,9 @@ pos:
 install: all
 	python setup.py install -O2 --root $(DESTDIR)
 	$(INSTALL) -d $(datadir)/applications/
+	$(INSTALL) -d $(datadir)/pixmaps/	
 	$(INSTALL) -m 0644 ojuba-virtual-cd.desktop $(datadir)/applications/
-	
+	$(INSTALL) -m 0644 ojuba-virtual-cd.png $(datadir)/pixmaps/	
 
 %.desktop: %.desktop.in pos
 	intltool-merge -d po $< $@
